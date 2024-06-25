@@ -1,9 +1,9 @@
 package com.example.baseball_back.domain;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDateTime;
 
@@ -19,9 +19,13 @@ public class Users {
     private Long pk;
 
     @NotNull
-    private Long socialId;
+    private String socialId;
 
-    @NotNull
+    @org.jetbrains.annotations.NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name="role_type")
+    private RoleType roleType = RoleType.USER;
+
     @CreationTimestamp
     private LocalDateTime createAt= LocalDateTime.now();
 
