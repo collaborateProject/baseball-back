@@ -1,0 +1,66 @@
+package com.example.baseball_back.domain;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Entity
+@Table(name = "diary")
+public class Diary {
+
+    @Id
+    @Generated
+    private Long pk;
+
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "user_pk")
+    private Users users;
+
+    @NotNull
+    private LocalDateTime date;
+
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "stadium_pk")
+    private Stadium stadium;
+
+    @NotNull
+    @CreationTimestamp
+    private LocalDateTime createAt= LocalDateTime.now();
+
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name="hometeam_pk")
+    private HomeTeam homeTeam;
+
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name="awayteam_pk")
+    private AwayTeam awayTeam;
+
+    @NotNull
+    private int homeTeamScore;
+
+    @NotNull
+    private int awayTeamScore;
+
+    private String review;
+
+    @NotNull
+    @CreationTimestamp
+    private LocalDateTime updateAt = LocalDateTime.now();
+
+    @NotNull
+    private boolean watch;
+
+
+
+
+}
