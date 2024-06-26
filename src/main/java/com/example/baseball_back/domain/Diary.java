@@ -27,23 +27,17 @@ public class Diary {
     private LocalDateTime date;
 
     @NotNull
-    @ManyToOne
-    @JoinColumn(name = "stadium_pk")
-    private Stadium stadium;
+    private String stadium;
 
     @NotNull
     @CreationTimestamp
     private LocalDateTime createAt= LocalDateTime.now();
 
     @NotNull
-    @ManyToOne
-    @JoinColumn(name="hometeam_pk")
-    private HomeTeam homeTeam;
+    private String homeTeam;
 
     @NotNull
-    @ManyToOne
-    @JoinColumn(name="awayteam_pk")
-    private AwayTeam awayTeam;
+    private String awayTeam;
 
     @NotNull
     private int homeTeamScore;
