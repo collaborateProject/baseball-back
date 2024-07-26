@@ -32,4 +32,8 @@ public class Users {
     @ManyToOne
     @JoinColumn(name = "myteam_pk")
     private MyTeam myTeam;
+
+    public void updateMyTeam(MyTeam myTeam){
+        this.myTeam = myTeam;
+    }
 }

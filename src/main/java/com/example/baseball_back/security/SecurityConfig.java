@@ -5,6 +5,7 @@ import com.example.baseball_back.jwt.filter.JwtVerifyFilter;
 import com.example.baseball_back.oauth2.OAuth2UserService;
 import com.example.baseball_back.security.LoginHandler.FailLoginHandler;
 import com.example.baseball_back.security.LoginHandler.SuccessLoginHandler;
+import com.example.baseball_back.service.RedisUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +30,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final OAuth2UserService oAuth2UserService;
+    private final RedisUtils redisUtils;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -52,7 +54,7 @@ public class SecurityConfig {
 
     @Bean
     public SuccessLoginHandler successLoginHandler() {
-        return new SuccessLoginHandler();
+        return new SuccessLoginHandler(redisUtils);
     }
 
     @Bean
@@ -62,7 +64,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtVerifyFilter jwtVerifyFilter() {
-        return new JwtVerifyFilter();
+        return new JwtVerifyFilter(redisUtils);
     }
 
     @Bean

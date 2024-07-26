@@ -1,8 +1,7 @@
 package com.example.baseball_back.security.LoginHandler;
-
-
 import com.example.baseball_back.jwt.JwtUtil;
 import com.example.baseball_back.jwt.dto.PrincipalDetail;
+import com.example.baseball_back.service.RedisUtils;
 import com.nimbusds.jose.shaded.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,30 +12,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import jakarta.annotation.PostConstruct;
+import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.Map;
 
 
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class SuccessLoginHandler  implements AuthenticationSuccessHandler {
 
-
-    @Value("${jwt.access-exp-time}")
-    private int accessExpTime;
-
-    @Value("${jwt.refresh-exp-time}")
-    private int refreshExpTime;
-
-    private static int ACCESS_EXP_TIME;
-    private static int REFRESH_EXP_TIME;
-
-    @PostConstruct
-    public void init() {
-        ACCESS_EXP_TIME = this.accessExpTime;
-        REFRESH_EXP_TIME = this.refreshExpTime;
-    }
+    private final RedisUtils redisUtils;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request
@@ -47,14 +36,21 @@ public class SuccessLoginHandler  implements AuthenticationSuccessHandler {
         PrincipalDetail principal = (PrincipalDetail) authentication.getPrincipal();
 
         Map<String, Object> responseMap = principal.getMemberInfo();
-        responseMap.put("accessToken", JwtUtil.generateToken(responseMap, SuccessLoginHandler.ACCESS_EXP_TIME));
-        responseMap.put("refreshToken", JwtUtil.generateToken(responseMap, SuccessLoginHandler.REFRESH_EXP_TIME));
+        String accessToken = JwtUtil.createAccessToken(responseMap);
+        String refreshToken = JwtUtil.refreshToken(responseMap);
+
+
+        //redis에 refreshToken 저장
+        redisUtils.setData(principal.getUsername(), refreshToken);
+
+        //client에 accessToken 만 전송
+        Map<String,Object> clientResponseMap = new HashMap<>();
+        clientResponseMap.put("accessToken", accessToken);
 
         System.out.println(responseMap);
 
-
         Gson gson = new Gson();
-        String json = gson.toJson(responseMap);
+        String json = gson.toJson(clientResponseMap);
 
         response.setContentType("application/json; charset=UTF-8");
 
