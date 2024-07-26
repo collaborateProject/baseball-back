@@ -61,14 +61,15 @@ jobs:
           if [ ! -z "$CONTAINER_ID" ]; then
             sudo docker stop $CONTAINER_ID
           fi
-
-      # 3. 최신 이미지를 컨테이너화하여 실행시킵니다
+      # 3. Redis 컨테이너 실행
+      - name: Run Redis container
+        run: sudo docker run -p 6379:6379 --name myredis -d redis:latest --requirepass "d@i@n@o@1@2@3@4"
+        
+      # 4. 최신 이미지를 컨테이너화하여 실행시킵니다
       - name: docker run new container
         run: sudo docker run --name github-actions-demo --rm -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
 
-      # 4. Redis 컨테이너 실행
-      - name: Run Redis container
-        run: sudo docker run -p 6379:6379 --name myredis -d redis:latest --requirepass "d@i@n@o@1@2@3@4"
+
 
       # 5. 미사용 이미지를 정리합니다
       - name: delete old docker image
