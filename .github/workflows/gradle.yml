@@ -53,14 +53,20 @@ jobs:
       # 1. 최신 이미지를 풀받습니다
       - name: docker pull
         run: sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
-      
-      # 2. 기존의 컨테이너를 중지시킵니다
-      - name: docker stop container
-        run: sudo docker stop $(sudo docker ps -q) 2>/dev/null || true
-  
-      # 3. Redis 컨테이너 실행
-      - name: Run Redis container
-        run: sudo docker run -p 6379:6379 --name myredis -d redis:latest --requirepass "d@i@n@o@1@2@3@4"        
+        
+      #2. 8080 포트 중지 밑 삭제
+      - name: Stop and remove container using port 8080
+        run: |
+          CONTAINER_ID=$(sudo docker ps -q -f "publish=8080")
+          if [ -n "$CONTAINER_ID" ]; then
+            echo "Stopping container with ID $CONTAINER_ID"
+            sudo docker stop "$CONTAINER_ID"
+            echo "Removing container with ID $CONTAINER_ID"
+            sudo docker rm "$CONTAINER_ID"
+          else
+            echo "No container is using port 8080"
+          fi
+        
       # 4. 최신 이미지를 컨테이너화하여 실행시킵니다
       
       - name: docker run new container
