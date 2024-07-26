@@ -11,10 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @Tag(name = "User 컨트롤러", description = "user 관련 컨트롤러")
 @RequiredArgsConstructor
@@ -28,9 +27,23 @@ public class UserController {
     public ResponseEntity createMyTeam(@AuthenticationPrincipal PrincipalDetail userDetails,
    @RequestBody @Valid MyTeamDTO.MyTeamRequest request){
         String socialId = (String) userDetails.getMemberInfo().get("socialId");
-        System.out.println("user SocialId = "+ socialId);
         userService.createMyTeam(socialId, request.getMyTeamPk());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+    @PatchMapping("/myteam")
+    public ResponseEntity modifyMyTeam(@AuthenticationPrincipal PrincipalDetail userDetails,
+                                       @RequestBody @Valid MyTeamDTO.MyTeamRequest request){
+        String socialId = (String) userDetails.getMemberInfo().get("socialId");
+        MyTeamDTO.ModifyMyTeamResponse response = userService.modifyMyTeam(socialId, request.getMyTeamPk());
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/myTeam")
+    public ResponseEntity<MyTeamDTO.getMyTeamResponse> getMyTeam(@AuthenticationPrincipal PrincipalDetail userDetails) throws RuntimeException{
+        String socialId = (String) userDetails.getMemberInfo().get("socialId");
+        MyTeamDTO.getMyTeamResponse response = userService.getMyTeam(socialId);
+        return ResponseEntity.ok(response);
+    }
+
 
 }
