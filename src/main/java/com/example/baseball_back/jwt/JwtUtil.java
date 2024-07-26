@@ -74,6 +74,26 @@ public class JwtUtil {
                 .signWith(key)
                 .compact();
     }
+
+    public static String createNewRefreshToken(Map<String,Object>valueMap){
+        Map<String, Object> info = new HashMap<>();
+        String socialId = (String) valueMap.get("socialId");
+        String role = (String) valueMap.get("role");
+        info.put("socialId",socialId);
+        info.put("role", role);
+        SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+        long nowMillis = System.currentTimeMillis();
+        Date now = new Date(nowMillis);
+        Date expiryDate = new Date(nowMillis + REFRESH_EXP_TIME);
+
+        return Jwts.builder()
+                .setHeaderParam("typ", "JWT")
+                .setClaims(info)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(key)
+                .compact();
+    }
     // accessToken 생성
     public static String createAccessToken(Map<String, Object> valueMap) {
         SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
@@ -165,6 +185,13 @@ public class JwtUtil {
         }
         return claim;
     }
+    // 토큰의 남은 만료시간
+    public static long tokenRemainTime(Integer expTime) {
+        Date expDate = new Date((long) expTime * (1000));
+        long remainMs = expDate.getTime() - System.currentTimeMillis();
+        return remainMs / (1000 * 60);
+    }
+
 
 
 }
