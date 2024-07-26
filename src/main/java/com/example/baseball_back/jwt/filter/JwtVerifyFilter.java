@@ -76,6 +76,12 @@ public class JwtVerifyFilter extends OncePerRequestFilter {
                         Map<String,Object>refreshClaim = JwtUtil.validateToken(refreshToken);
                         accessToken = JwtUtil.createNewAccessToken(refreshClaim);
 
+                        //만료시간이 한시간도 남지 않으면 리프레쉬 토큰 재발급
+                        long expTime = JwtUtil.tokenRemainTime((Integer) refreshClaim.get("exp"));
+                        if (expTime <= 60) {
+                            String newRefreshToken = JwtUtil.createNewRefreshToken(refreshClaim);
+                            redisUtils.setData(socialId, newRefreshToken);
+                        }
                     }
 
                 }
