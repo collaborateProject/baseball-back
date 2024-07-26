@@ -28,7 +28,7 @@ public class TestController {
 
     @GetMapping("/")
     public ResponseEntity hello() {
-        return ResponseEntity.ok("자동 배포 자동화 테스트");
+        return ResponseEntity.ok("자동 배포 테스트");
     }
 
 }
