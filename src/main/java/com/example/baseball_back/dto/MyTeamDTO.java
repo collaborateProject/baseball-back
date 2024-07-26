@@ -16,4 +16,17 @@ public class MyTeamDTO {
         private Long myTeamPk;
 
     }
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ModifyMyTeamResponse{
+        private Long myTeamPk;
+    }
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class getMyTeamResponse{
+        private Long pk;
+        private String myTeam;
+    }
 }
