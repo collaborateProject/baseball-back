@@ -4,14 +4,17 @@ package com.example.baseball_back.jwt.filter;
 import com.example.baseball_back.jwt.JwtUtil;
 import com.example.baseball_back.jwt.exception.CustomExpiredJwtException;
 import com.example.baseball_back.jwt.exception.CustomJwtException;
+import com.example.baseball_back.service.RedisUtils;
 import com.nimbusds.jose.shaded.gson.Gson;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.util.PatternMatchUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -20,6 +23,8 @@ import java.io.PrintWriter;
 import java.util.Map;
 
 @Slf4j
+@Component
+@RequiredArgsConstructor
 public class JwtVerifyFilter extends OncePerRequestFilter {
 
     private static final String[] whitelist = {"/signUp", "/login" , "/"
@@ -27,6 +32,7 @@ public class JwtVerifyFilter extends OncePerRequestFilter {
     };
 
     private static final String ACCESS_ENDPOINT = "/api/v1/jwt/access";
+    private final RedisUtils redisUtils;
 
     private static void checkAuthorizationHeader(String header) {
         if(header == null) {
@@ -43,6 +49,7 @@ public class JwtVerifyFilter extends OncePerRequestFilter {
         return PatternMatchUtils.simpleMatch(whitelist, requestURI);
     }
 
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response
             , FilterChain filterChain) throws ServletException, IOException {
@@ -53,27 +60,35 @@ public class JwtVerifyFilter extends OncePerRequestFilter {
         try {
             // header 가 올바른 형식인지 체크
             checkAuthorizationHeader(authHeader);
-            String token = JwtUtil.getTokenFromHeader(authHeader);
-            System.out.println(token);
+            String accessToken = JwtUtil.getTokenFromHeader(authHeader);
 
-            if (ACCESS_ENDPOINT.equals(requestURI)) {
-                try {
-                    // 토큰 검증 (
-                    Map<String, Object> claims = JwtUtil.getClaimsWithoutValidation(token);
-                    request.setAttribute("claims", claims);
-                } catch (CustomJwtException e) {
+            if(accessToken != null){
+                System.out.println(accessToken);
+                if(!JwtUtil.isValidateToken(accessToken)){
+                    //만료된 토큰에서 refreshtoken 가져오기
+                    Map<String,Object> claim = JwtUtil.getClaimsWithoutValidation(accessToken);
+                    String socialId = (String) claim.get("socialId");
+                    String refreshToken = redisUtils.getData(socialId);
+                    System.out.println(refreshToken);
+                    //리프레시 토큰 검증
+                    boolean validateRefreshToken = JwtUtil.isValidateToken(refreshToken);
+                    if(validateRefreshToken){
+                        Map<String,Object>refreshClaim = JwtUtil.validateToken(refreshToken);
+                        accessToken = JwtUtil.createNewAccessToken(refreshClaim);
+
+                    }
 
                 }
-                filterChain.doFilter(request, response);
-                return;
+
             }
 
-            Authentication authentication = JwtUtil.getAuthentication(token);
+            Authentication authentication = JwtUtil.getAuthentication(accessToken);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             filterChain.doFilter(request, response);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Gson gson = new Gson();
             String json = "";
             if (e instanceof CustomExpiredJwtException) {

@@ -18,10 +18,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 @Slf4j
@@ -31,28 +28,74 @@ public class JwtUtil {
     @Value("${jwt.key}")
     private String secretKey;
 
+    @Value("${jwt.access-exp-time}")
+    private int accessExpTime;
 
+    @Value("${jwt.refresh-exp-time}")
+    private int refreshExpTime;
 
+    private static int ACCESS_EXP_TIME;
+    private static int REFRESH_EXP_TIME;
     private static String SECRET_KEY;
 
 
     @PostConstruct
     public void init() {
+        ACCESS_EXP_TIME = this.accessExpTime;
+        REFRESH_EXP_TIME = this.refreshExpTime;
         SECRET_KEY = this.secretKey;
 
     }
+
+
 
     // 토큰 추출
     public static String getTokenFromHeader(String header) {
         return header.split(" ")[1];
     }
 
-    // 토큰 생성
-    public static String generateToken(Map<String, Object> valueMap, long validTimeMillis) {
+    //newAccessToken 생성
+    public static String createNewAccessToken(Map<String,Object>valueMap){
+        Map<String, Object> info = new HashMap<>();
+        String socialId = (String) valueMap.get("socialId");
+        String role = (String) valueMap.get("role");
+        info.put("socialId",socialId);
+        info.put("role", role);
         SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
         long nowMillis = System.currentTimeMillis();
         Date now = new Date(nowMillis);
-        Date expiryDate = new Date(nowMillis + validTimeMillis);
+        Date expiryDate = new Date(nowMillis + ACCESS_EXP_TIME);
+
+        return Jwts.builder()
+                .setHeaderParam("typ", "JWT")
+                .setClaims(info)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(key)
+                .compact();
+    }
+    // accessToken 생성
+    public static String createAccessToken(Map<String, Object> valueMap) {
+        SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+        long nowMillis = System.currentTimeMillis();
+        Date now = new Date(nowMillis);
+        Date expiryDate = new Date(nowMillis + ACCESS_EXP_TIME);
+
+        return Jwts.builder()
+                .setHeaderParam("typ", "JWT")
+                .setClaims(valueMap)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(key)
+                .compact();
+    }
+
+    //refreshToken 생성
+    public static String refreshToken(Map<String, Object> valueMap) {
+        SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+        long nowMillis = System.currentTimeMillis();
+        Date now = new Date(nowMillis);
+        Date expiryDate = new Date(nowMillis + REFRESH_EXP_TIME);
 
         return Jwts.builder()
                 .setHeaderParam("typ", "JWT")
@@ -92,6 +135,18 @@ public class JwtUtil {
         PrincipalDetail principalDetail = new PrincipalDetail(user, authorities);
 
         return new UsernamePasswordAuthenticationToken(principalDetail, "", authorities);
+    }
+
+    // 토큰의 유효성 + 만료일자 확인
+    public static boolean isValidateToken(String jwtToken) {
+        try {
+            SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+            Jws<Claims> claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwtToken);
+            return !claims.getBody().getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            log.info(e.getMessage());
+            return false;
+        }
     }
 
     public static Map<String, Object> validateToken(String token) {

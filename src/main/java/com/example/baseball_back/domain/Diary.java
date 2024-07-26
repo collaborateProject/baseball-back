@@ -55,6 +55,12 @@ public class Diary {
     private boolean watch;
 
 
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "icon_pk")
+    private Icon icon;
+
+
 
 
 }
