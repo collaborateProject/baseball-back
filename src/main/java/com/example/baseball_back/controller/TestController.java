@@ -26,7 +26,7 @@ public class TestController {
         return ResponseEntity.ok(test);
     }
 
-    @GetMapping("/")
+    @GetMapping("/docker")
     public ResponseEntity hello() {
         return ResponseEntity.ok("자동 배포 테스트");
     }
