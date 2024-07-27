@@ -32,18 +32,20 @@ jobs:
       # 2. gradlew 파일에 실행 권한 부여
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-     # 4. application.yml 파일 생성
+
+      # 3. application.yml 파일 생성
       - name: Create application.yml
         run: |
           mkdir -p src/main/resources
           echo "${{ secrets.APPLICATION_YML }}" > src/main/resources/application.yml
 
-      # 5. application.properties 파일 생성
+      # 4. application.properties 파일 생성
       - name: Create application.properties
         run: |
           mkdir -p src/main/resources
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/main/resources/application.properties
 
+      # 5. Gradle 빌드 수행
       - name: Build with Gradle
         run: ./gradlew clean build -x test --no-build-cache
 
@@ -51,20 +53,35 @@ jobs:
       - name: Check build directory
         run: ls -al build/libs
 
-      # 4. Docker 이미지 빌드
+      # 6. Docker 이미지 빌드
       - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/baseball:2.0 .
+        id: docker-build
+        run: |
+          VERSION=$(date +%Y%m%d%H%M%S)  # 현재 날짜와 시간으로 버전 생성
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION .
 
-      # 5. DockerHub 로그인
+      # 7. DockerHub 로그인
       - name: Docker Login
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      # 6. Docker Hub 이미지 푸시
+      # 8. Docker Hub 이미지 푸시
       - name: Push Docker image to Docker Hub
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/baseball:2.0
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION
+          echo "Pushed Docker image with tag: $VERSION" 
+
+      # 9. 최신 태그를 GitHub Release에 기록 (선택사항)
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: github.event_name == 'push'
+        with:
+          files: build/libs/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   run-docker-image-on-ec2:
     needs: build-docker-image
@@ -84,10 +101,11 @@ jobs:
             echo "No container is using port 8080"
           fi
 
-      # 2. 최신 이미지를 컨테이너화하여 실행
+      # 2. 최신 Docker 이미지 실행
       - name: Run new Docker container
-        run: sudo docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball:2.0
+        run: |
+          docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION
 
-      # 3. 미사용 이미지를 정리
+      # 3. 미사용 Docker 이미지 및 볼륨 정리
       - name: Prune unused Docker images and volumes
         run: sudo docker system prune -f --volumes
