@@ -1,6 +1,1 @@
-[submodule "path/to/submodule"]
-	path = path/to/submodule
-	url = https://github.com/chohuison/baseball-back-submodule.git
-[submodule "baseball-back-submodule"]
-	path = baseball-back-submodule
-	url = https://github.com/chohuison/baseball-back-submodule.git
+
