@@ -49,7 +49,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/baseballdiary .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/baseball .
 
       - name: Docker Login
         uses: docker/login-action@v2
@@ -60,7 +60,7 @@ jobs:
       - name: Push Docker image to Docker Hub
         run: |
           echo "Pushing Docker image with tag: latest"
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/baseballdiary
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/baseball
 
   run-docker-image-on-ec2:
     needs: build-docker-image
@@ -70,7 +70,7 @@ jobs:
       # 1. 최신 이미지를 풀받습니다
       - name: Pull Docker image
         run: |
-          sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/baseballdiary
+          sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/baseball
 
       # 2. 8080 포트 중지 및 삭제
       - name: Stop and remove container using port 8080
@@ -88,7 +88,7 @@ jobs:
       # 3. 최신 Docker 이미지로 새 컨테이너 실행
       - name: Run new Docker container
         run: |
-          sudo docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseballdiary
+          sudo docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball
 
       # 4. 미사용 Docker 이미지 및 볼륨 정리
       - name: Prune unused Docker images and volumes
