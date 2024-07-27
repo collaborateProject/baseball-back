@@ -19,16 +19,4 @@ import java.util.List;
 public class TestController {
 
 
-    @GetMapping("/test")
-    public ResponseEntity<String> test() throws Exception {
-
-       String test = "테스트 성공";
-        return ResponseEntity.ok(test);
-    }
-
-    @GetMapping("/githubActions")
-    public ResponseEntity hello() {
-        return ResponseEntity.ok("자동 배포 테스트");
-    }
-
 }
