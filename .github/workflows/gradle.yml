@@ -74,14 +74,6 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION
           echo "Pushed Docker image with tag: $VERSION" 
 
-      # 9. 최신 태그를 GitHub Release에 기록 (선택사항)
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        if: github.event_name == 'push'
-        with:
-          files: build/libs/*.jar
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   run-docker-image-on-ec2:
     needs: build-docker-image
