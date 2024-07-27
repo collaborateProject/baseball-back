@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          submodules: true # 서브모듈을 가져오도록 설정
+          submodules: recursive # 서브모듈을 가져오도록 설정
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }} 
 
       - name: Set up JDK 17
