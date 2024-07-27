@@ -49,7 +49,7 @@ jobs:
       - name: Build Docker image
         id: docker-build
         run: |
-          VERSION=$(date +%Y%m%d%H%M%S)  # 현재 날짜와 시간으로 버전 생성
+          VERSION=2.0  # 직접 버전 설정
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION .
 
@@ -61,9 +61,9 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: |
+          VERSION=2.0  # 직접 버전 설정
           echo "Pushing Docker image with tag: $VERSION"
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION
-          echo "Pushed Docker image with tag: $VERSION"
 
   run-docker-image-on-ec2:
     needs: build-docker-image
@@ -87,6 +87,7 @@ jobs:
 
       - name: Run new Docker container
         run: |
+          VERSION=2.0  # 직접 버전 설정
           echo "Running Docker container with image: ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION"
           sudo docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION
 
