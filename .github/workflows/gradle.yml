@@ -71,9 +71,9 @@ jobs:
       # 8. Docker Hub 이미지 푸시
       - name: Push Docker image to Docker Hub
         run: |
+          echo "Pushing Docker image with tag: $VERSION"
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION
-          echo "Pushed Docker image with tag: $VERSION" 
-
+          echo "Pushed Docker image with tag: $VERSION"
 
   run-docker-image-on-ec2:
     needs: build-docker-image
@@ -92,10 +92,12 @@ jobs:
           else
             echo "No container is using port 8080"
           fi
-          
-        # 2. 최신 이미지를 컨테이너화하여 실행
+
+      # 2. 최신 Docker 이미지 실행
       - name: Run new Docker container
-        run: sudo docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION
+        run: |
+          echo "Running Docker container with image: ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION"
+          sudo docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION
 
       # 3. 미사용 Docker 이미지 및 볼륨 정리
       - name: Prune unused Docker images and volumes
