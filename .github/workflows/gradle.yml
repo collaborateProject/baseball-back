@@ -96,7 +96,7 @@ jobs:
       # 2. 최신 Docker 이미지 실행
       - name: Run new Docker container
         run: |
-          docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION
+          sudo docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION
 
       # 3. 미사용 Docker 이미지 및 볼륨 정리
       - name: Prune unused Docker images and volumes
