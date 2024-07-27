@@ -16,7 +16,7 @@ jobs:
           submodules: true 
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-		#submodule의 내용을 update한다.
+	#submodule의 내용을 update한다.
       - name: Update config submodule
         run: |
           git submodule update --init
