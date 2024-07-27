@@ -32,7 +32,7 @@ jobs:
 
     # 4. Docker 이미지 빌드
     - name: docker image build
-      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo:latest .
+      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/baseball:latest .
 
     # 5. DockerHub 로그인
     - name: docker login
@@ -43,30 +43,34 @@ jobs:
 
     # 6. Docker Hub 이미지 푸시
     - name: docker Hub push
-      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo:latest
+      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/baseball:latest
 
   run-docker-image-on-ec2:
     needs: build-docker-image
     runs-on: self-hosted
 
     steps:
-      # 1. 최신 이미지를 풀받습니다
-      - name: docker pull
-        run: sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
-      
-      # 2. 포트 8080을 사용하는 기존의 컨테이너를 중지시킵니다
-      - name: docker stop container
+        
+      #1. 8080 포트 중지 밑 삭제
+      - name: Stop and remove container using port 8080
         run: |
-          CONTAINER_ID=$(sudo docker ps -q --filter "publish=8080")
-          if [ ! -z "$CONTAINER_ID" ]; then
-            sudo docker stop $CONTAINER_ID
+          CONTAINER_ID=$(sudo docker ps -q -f "publish=8080")
+          if [ -n "$CONTAINER_ID" ]; then
+            echo "Stopping container with ID $CONTAINER_ID"
+            sudo docker stop "$CONTAINER_ID"
+            echo "Removing container with ID $CONTAINER_ID"
+            sudo docker rm "$CONTAINER_ID"
+          else
+            echo "No container is using port 8080"
           fi
-
-      # 3. 최신 이미지를 컨테이너화하여 실행시킵니다
+        
+      # 2. 최신 이미지를 컨테이너화하여 실행시킵니다
+      
       - name: docker run new container
-        run: sudo docker run --name github-actions-demo --rm -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo
+        run: sudo docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball:latest
 
-      # 4. 미사용 이미지를 정리합니다
+
+
+      # 3. 미사용 이미지를 정리합니다
       - name: delete old docker image
-        run: sudo docker system prune -f
-
+        run: sudo docker system prune -f --volumes
