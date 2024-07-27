@@ -32,6 +32,17 @@ jobs:
       # 2. gradlew 파일에 실행 권한 부여
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+     # 4. application.yml 파일 생성
+      - name: Create application.yml
+        run: |
+          mkdir -p src/main/resources
+          echo "${{ secrets.APPLICATION_YML }}" > src/main/resources/application.yml
+
+      # 5. application.properties 파일 생성
+      - name: Create application.properties
+        run: |
+          mkdir -p src/main/resources
+          echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/main/resources/application.properties
 
       - name: Build with Gradle
         run: ./gradlew clean build -x test --no-build-cache
