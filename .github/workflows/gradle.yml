@@ -47,11 +47,8 @@ jobs:
         run: ls -al build/libs
 
       - name: Build Docker image
-        id: docker-build
         run: |
-          VERSION=2.0  # 직접 버전 설정
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/baseball .
 
       - name: Docker Login
         uses: docker/login-action@v2
@@ -61,18 +58,20 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: |
-          VERSION=2.0  # 직접 버전 설정
-          echo "Pushing Docker image with tag: $VERSION"
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION
+          echo "Pushing Docker image with tag: latest"
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/baseball
 
   run-docker-image-on-ec2:
     needs: build-docker-image
     runs-on: self-hosted
 
     steps:
-      - name: Check VERSION environment variable
-        run: echo "VERSION: $VERSION"  # VERSION 값 확인
+      # 1. 최신 이미지를 풀받습니다
+      - name: Pull Docker image
+        run: |
+          sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/baseball
 
+      # 2. 8080 포트 중지 및 삭제
       - name: Stop and remove container using port 8080
         run: |
           CONTAINER_ID=$(sudo docker ps -q -f "publish=8080")
@@ -85,11 +84,11 @@ jobs:
             echo "No container is using port 8080"
           fi
 
+      # 3. 최신 Docker 이미지로 새 컨테이너 실행
       - name: Run new Docker container
         run: |
-          VERSION=2.0  # 직접 버전 설정
-          echo "Running Docker container with image: ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION"
-          sudo docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION
+          sudo docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball
 
+      # 4. 미사용 Docker 이미지 및 볼륨 정리
       - name: Prune unused Docker images and volumes
         run: sudo docker system prune -f --volumes
