@@ -92,11 +92,10 @@ jobs:
           else
             echo "No container is using port 8080"
           fi
-
-      # 2. 최신 Docker 이미지 실행
+          
+        # 2. 최신 이미지를 컨테이너화하여 실행
       - name: Run new Docker container
-        run: |
-          sudo docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION
+        run: sudo docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball:$VERSION
 
       # 3. 미사용 Docker 이미지 및 볼륨 정리
       - name: Prune unused Docker images and volumes
