@@ -17,43 +17,47 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          
-      # 2. gradlew 파일에 실행 권한 부여
+
+      # 2. Gradle Wrapper 파일이 존재하는지 확인
+      - name: Verify gradlew file
+        run: ls -al gradlew
+
+      # 3. gradlew 파일에 실행 권한 부여
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 3. application.yml 파일 생성
+      # 4. application.yml 파일 생성
       - name: Create application.yml
         run: |
           mkdir -p src/main/resources
           echo "${{ secrets.APPLICATION_YML }}" > src/main/resources/application.yml
 
-      # 4. application.properties 파일 생성
+      # 5. application.properties 파일 생성
       - name: Create application.properties
         run: |
           mkdir -p src/main/resources
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/main/resources/application.properties
 
-      # 5. Gradle 빌드 수행
+      # 6. Gradle 빌드 수행
       - name: Build with Gradle
         run: ./gradlew clean build -x test --no-build-cache
 
-      # 6. 빌드 아티팩트 확인
+      # 7. 빌드 아티팩트 확인
       - name: Check build directory
         run: ls -al build/libs
 
-      # 7. Docker 이미지 빌드
+      # 8. Docker 이미지 빌드
       - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/baseball:latest .
 
-      # 8. DockerHub 로그인
+      # 9. DockerHub 로그인
       - name: Docker Login
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      # 9. Docker Hub 이미지 푸시
+      # 10. Docker Hub 이미지 푸시
       - name: Push Docker image to Docker Hub
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/baseball:latest
 
