@@ -10,10 +10,13 @@ import com.example.baseball_back.repository.IconRepository;
 import com.example.baseball_back.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -50,5 +53,26 @@ public class DiaryService {
 
         diaryRepository.save(diary);
 
+    }
+
+    public boolean isCreateDiary(String socialId, LocalDateTime date, String homeTeam) {
+        Users users = usersRepository.findBySocialId(socialId)
+                .orElseThrow(() -> new NotFoundException("해당 사용자가 존재하지 않습니다."));
+
+        List<Diary> diaryByUsersAndDate = diaryRepository.findByUsers(users);
+
+        boolean isWrite = true;
+        for (Diary diary : diaryByUsersAndDate) {
+            // LocalDateTime에서 초와 밀리초 부분을 제거하여 비교
+            LocalDateTime diaryDate = diary.getDate().withSecond(0).withNano(0);
+            LocalDateTime formattedDate = date.withSecond(0).withNano(0);
+
+            if ((diary.getHomeTeam().equals(homeTeam) || diary.getAwayTeam().equals(homeTeam)) && diaryDate.isEqual(formattedDate)) {
+                isWrite = false;
+                break; // 조건을 충족하는 경우, 더 이상 반복문을 실행할 필요가 없으므로 break 문 추가
+            }
+        }
+
+        return isWrite;
     }
 }

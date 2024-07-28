@@ -46,6 +46,20 @@ public class DiaryDTO {
 
         @NotNull(message = "아이콘이 null이면 안됩니다.")
         private Long iconPk;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class IsCreateDiary{
+        @NotNull(message = "날짜가 null이면 안됩니다")
+        private LocalDateTime date;
+
+        @NotNull(message = "홈팀이 null이면 안됩니다.")
+        private String homeTeam;
+
+        @NotNull(message = "어웨이팀 null이면 안됩니다.")
+        private String awayTeam;
 
 
     }
