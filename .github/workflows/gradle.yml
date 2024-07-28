@@ -5,66 +5,76 @@ on:
     branches: [ "main" ]
 
 permissions:
-  contents: read
-#
+  contents: write
+
 jobs:
   build-docker-image:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive  # 모든 submodule을 포함하도록 설정
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-
-      # submodule 초기화 및 업데이트
       - name: Initialize and update submodules
         run: |
-          git submodule init
-          git submodule update
+          git submodule sync --recursive
+          git submodule update --init --recursive
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-      # 1. Java 17 설정
+
+
+      - name: Check submodule status
+        run: git submodule status
+
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # 2. gradlew 파일에 실행 권한 부여
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 4. application.yml 파일 생성
       - name: Create application.yml
         run: |
           mkdir -p src/main/resources
           echo "${{ secrets.APPLICATION_YML }}" > src/main/resources/application.yml
 
-      # 5. application.properties 파일 생성
       - name: Create application.properties
         run: |
           mkdir -p src/main/resources
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/main/resources/application.properties
 
-      # 6. Gradle 빌드
       - name: Build with Gradle
         run: ./gradlew clean build -x test --no-build-cache
 
-      # 7. 빌드 아티팩트 확인
       - name: Check build directory
         run: ls -al build/libs
 
-      # 8. Docker 이미지 빌드
+      - name: Verify JAR contents
+        run: |
+          unzip -l build/libs/baseball-back-0.0.1-SNAPSHOT.jar
+
+      - name: Verify application.yml in JAR
+        run: |
+          unzip -l build/libs/baseball-back-0.0.1-SNAPSHOT.jar | grep "application.yml"
+
+      - name: Verify application.properties in JAR
+        run: |
+          unzip -l build/libs/baseball-back-0.0.1-SNAPSHOT.jar | grep "application.properties"
+
+      - name: Print application.properties content
+        run: |
+          unzip -p build/libs/baseball-back-0.0.1-SNAPSHOT.jar BOOT-INF/classes/application.properties
+
       - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/baseball2 .
 
-      # 9. DockerHub 로그인
       - name: Docker Login
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      # 10. Docker Hub 이미지 푸시
       - name: Push Docker image to Docker Hub
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/baseball2
 
@@ -73,11 +83,9 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      # 1. 최신 이미지를 풀받습니다
       - name: Pull Docker image
         run: sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/baseball2
 
-      # 2. 8080 포트 중지 및 삭제
       - name: Stop and remove container using port 8080
         run: |
           CONTAINER_ID=$(sudo docker ps -q -f "publish=8080")
@@ -90,10 +98,8 @@ jobs:
             echo "No container is using port 8080"
           fi
 
-      # 3. 최신 이미지를 컨테이너화하여 실행
       - name: Run new Docker container
         run: sudo docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball2
 
-      # 4. 미사용 이미지를 정리
       - name: Prune unused Docker images and volumes
         run: sudo docker system prune -f --volumes
