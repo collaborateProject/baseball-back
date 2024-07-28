@@ -11,16 +11,15 @@ jobs:
   build-docker-image:
     runs-on: ubuntu-latest
     steps:
-      - name: Initialize and update submodules
-        run: |
-          git submodule sync --recursive
-          git submodule update --init --recursive
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-
+      - name: Initialize and update submodules
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive
 
       - name: Check submodule status
         run: git submodule status
@@ -102,4 +101,4 @@ jobs:
         run: sudo docker run --name github-actions-demo -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/baseball2
 
       - name: Prune unused Docker images and volumes
-        run: sudo docker system prune -f --volumes 이렇게 하니깐 아얘 오류나 
+        run: sudo docker system prune -f --volumes
