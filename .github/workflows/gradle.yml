@@ -55,7 +55,7 @@ jobs:
       - name: Verify JAR contents
         run: |
           unzip -l build/libs/baseball-back-0.0.1-SNAPSHOT.jar
-
+    #
       - name: Verify application.yml in JAR
         run: |
           unzip -l build/libs/baseball-back-0.0.1-SNAPSHOT.jar | grep "application.yml"
