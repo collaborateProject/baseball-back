@@ -12,9 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive  # 모든 submodule을 포함하도록 설정
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       # submodule 초기화 및 업데이트
       - name: Initialize and update submodules
