@@ -1,6 +1,7 @@
 package com.example.baseball_back.controller;
 
 import com.example.baseball_back.dto.DiaryDTO;
+import com.example.baseball_back.exception.NotFoundException;
 import com.example.baseball_back.jwt.dto.PrincipalDetail;
 import com.example.baseball_back.service.DiaryService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Tag(name = "Diary 컨트롤러", description = "diary 관련 컨트롤러")
 @RequiredArgsConstructor
@@ -45,6 +47,28 @@ public class DiaryController {
 
         boolean response = diaryService.isCreateDiary(socialId, dateTime, homeTeam);
         return ResponseEntity.ok(response);
+    }
+    @GetMapping("/diary")
+    public ResponseEntity<List<DiaryDTO.DiaryListResponse>> getShotRecordsList(@AuthenticationPrincipal PrincipalDetail userDetails,@RequestParam String date
+                                                                               ){
+
+        String userId = (String)  userDetails.getMemberInfo().get("socialId");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
+        LocalDateTime dateTime = LocalDateTime.parse(date, formatter);
+
+        List<DiaryDTO.DiaryListResponse> diaryList = diaryService.getDiaryList(userId,dateTime);
+        return ResponseEntity.ok(diaryList);
+    }
+
+    @DeleteMapping("/diary/{diary_pk}")
+    public ResponseEntity deleteShotRecord(@PathVariable Long diary_pk){
+        try{
+            diaryService.deleteDiary(diary_pk);
+            return ResponseEntity.noContent().build();
+        }
+        catch(NotFoundException e){
+            return ResponseEntity.notFound().build();
+        }
     }
 
 }
