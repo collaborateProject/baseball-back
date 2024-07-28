@@ -53,7 +53,7 @@ public class Diary {
     private LocalDateTime updateAt = LocalDateTime.now();
 
     @NotNull
-    private boolean watch;
+    private Boolean watch;
 
 
     @NotNull

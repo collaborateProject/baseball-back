@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -59,10 +60,10 @@ public class DiaryService {
         Users users = usersRepository.findBySocialId(socialId)
                 .orElseThrow(() -> new NotFoundException("해당 사용자가 존재하지 않습니다."));
 
-        List<Diary> diaryByUsersAndDate = diaryRepository.findByUsers(users);
+        List<Diary> diaryByUsers = diaryRepository.findByUsers(users);
 
         boolean isWrite = true;
-        for (Diary diary : diaryByUsersAndDate) {
+        for (Diary diary : diaryByUsers) {
             // LocalDateTime에서 초와 밀리초 부분을 제거하여 비교
             LocalDateTime diaryDate = diary.getDate().withSecond(0).withNano(0);
             LocalDateTime formattedDate = date.withSecond(0).withNano(0);
@@ -75,4 +76,62 @@ public class DiaryService {
 
         return isWrite;
     }
+
+    public DiaryDTO.DiaryListResponse getDiary(DiaryDTO.DiaryListRequest request){
+        DiaryDTO.DiaryListResponse response =
+                DiaryDTO.DiaryListResponse.builder()
+                        .pk(request.getPk())
+                        .homeTeam(request.getHomeTeam())
+                        .awayTeam(request.getAwayTeam())
+                        .homeTeamScore(request.getHomeTeamScore())
+                        .awayTeamScore(request.getAwayTeamScore())
+                        .stadium(request.getStadium())
+                        .review(request.getReview())
+                        .watch(request.getWatch())
+                        .iconPk(request.getIcon().getPk())
+                        .build();
+
+        return response;
+    }
+
+    public List<DiaryDTO.DiaryListResponse> getDiaryList(String socialId, LocalDateTime date) {
+        Users user = usersRepository.findBySocialId(socialId)
+                .orElseThrow(() -> new NotFoundException("해당하는 사용자가 없습니다."));
+        List<Diary> diaryByUser = diaryRepository.findByUsers(user);
+
+        LocalDateTime formattedDate = date.withSecond(0).withNano(0);
+
+        List<DiaryDTO.DiaryListResponse> shotRecordsDTOS = new ArrayList<>();
+        for (Diary diary : diaryByUser) {
+            LocalDateTime diaryDate = diary.getDate().withSecond(0).withNano(0);
+            if(formattedDate.equals(diaryDate)){
+                DiaryDTO.DiaryListRequest request =
+                        DiaryDTO.DiaryListRequest.Records(
+                             diary.getPk(),
+                                diary.getStadium(),
+                                diary.getHomeTeam(),
+                                diary.getAwayTeam(),
+                                diary.getHomeTeamScore(),
+                                diary.getAwayTeamScore(),
+                                diary.getReview(),
+                                diary.getWatch(),
+                                diary.getIcon()
+                        );
+                DiaryDTO.DiaryListResponse response = getDiary(request);
+
+                shotRecordsDTOS.add(response);
+            }
+
+        }
+        return shotRecordsDTOS;
+    }
+
+    public void deleteDiary(Long pk) throws RuntimeException{
+        Diary diary = diaryRepository.findById(pk)
+                .orElseThrow(()-> new NotFoundException("해당 다이어리가 존재하지 않습니다"));
+        System.out.println(diary.getPk());
+        diaryRepository.delete(diary);
+
+    }
+
 }
