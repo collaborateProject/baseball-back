@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 permissions:
-  contents: write  # Temporarily increase permissions
+  contents: write
 
 jobs:
   build-docker-image:
@@ -60,6 +60,14 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/baseball2
+
+      # Docker 컨테이너에서 JAR 파일 검사
+      - name: Check application.yml in JAR
+        run: |
+          docker create --name temp_container ${{ secrets.DOCKERHUB_USERNAME }}/baseball2
+          docker cp temp_container:/app/build/libs/your-app.jar ./your-app.jar
+          docker rm temp_container
+          unzip -l your-app.jar | grep "application.yml"
 
   run-docker-image-on-ec2:
     needs: build-docker-image
