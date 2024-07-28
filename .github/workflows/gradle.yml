@@ -43,6 +43,22 @@ jobs:
       # 7. 빌드 아티팩트 확인
       - name: Check build directory
         run: ls -al build/libs
+        
+      - name: Verify JAR contents
+        run: |
+          unzip -l build/libs/baseball-back-0.0.1-SNAPSHOT.jar
+
+      - name: Verify application.yml in JAR
+        run: |
+          unzip -l build/libs/baseball-back-0.0.1-SNAPSHOT.jar | grep "application.yml"
+
+      - name: Verify application.properties in JAR
+        run: |
+          unzip -l build/libs/baseball-back-0.0.1-SNAPSHOT.jar | grep "application.properties"
+
+      - name: Print application.properties content
+        run: |
+          unzip -p build/libs/baseball-back-0.0.1-SNAPSHOT.jar BOOT-INF/classes/application.properties
 
       # 8. Docker 이미지 빌드
       - name: Build Docker image
